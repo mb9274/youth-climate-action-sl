@@ -46,3 +46,17 @@ firebase deploy
 ```
 
 If you already have a Firebase project, point Hosting at the current folder and keep the `/api/join-team` rewrite in `firebase.json`.
+
+## Local preview
+
+If you want to view the site right now on this machine, run the preview server from the `work` folder:
+
+```bash
+node work/local-preview-server.mjs
+```
+
+Then open:
+
+```text
+http://127.0.0.1:4174
+```
