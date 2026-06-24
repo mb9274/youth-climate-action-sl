@@ -79,6 +79,56 @@ function getFirebaseAdmin() {
   return admin;
 }
 
+function getSupabaseConfig() {
+  const url = getConfig('SUPABASE_URL');
+  const serviceRoleKey = getConfig('SUPABASE_SERVICE_ROLE_KEY');
+  const table = getConfig('SUPABASE_TABLE', 'applications');
+
+  if (url && serviceRoleKey) {
+    return { url: url.replace(/\/+$/, ''), serviceRoleKey, table };
+  }
+
+  return null;
+}
+
+async function storeWithSupabase(application, submissionDate) {
+  const supabase = getSupabaseConfig();
+  if (!supabase) {
+    return null;
+  }
+
+  const payload = {
+    full_name: application.fullName,
+    age: application.age,
+    district_location: application.location || null,
+    email_address: application.email,
+    phone_number: application.phone || null,
+    skills_interests: application.skillsInterests || null,
+    motivation_for_joining: application.motivation,
+    submission_date: submissionDate.toISOString(),
+    source: 'vercel-join-our-team-form',
+  };
+
+  const response = await fetch(`${supabase.url}/rest/v1/${supabase.table}`, {
+    method: 'POST',
+    headers: {
+      apikey: supabase.serviceRoleKey,
+      Authorization: `Bearer ${supabase.serviceRoleKey}`,
+      'Content-Type': 'application/json',
+      Prefer: 'return=representation',
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(`Supabase insert failed: ${text}`);
+  }
+
+  const data = await response.json().catch(() => []);
+  return Array.isArray(data) && data[0] ? data[0] : null;
+}
+
 function buildTransport() {
   const host = getConfig('SMTP_HOST');
   const port = Number(getConfig('SMTP_PORT', '587'));
@@ -150,18 +200,28 @@ module.exports = async (req, res) => {
 
     const application = validation.value;
     const submissionDate = new Date();
-    const firebaseAdmin = getFirebaseAdmin();
-    const db = firebaseAdmin.firestore();
-    const applicationsCollection = db.collection('applications');
     const adminEmail = getConfig('ADMIN_NOTIFICATION_EMAIL', 'climateteam971@gmail.com');
     const smtpFrom = getConfig('SMTP_FROM', getConfig('SMTP_USER', adminEmail));
     const transport = buildTransport();
 
-    const docRef = await applicationsCollection.add({
-      ...application,
-      submissionDate: firebaseAdmin.firestore.FieldValue.serverTimestamp(),
-      source: 'vercel-join-our-team-form',
-    });
+    let record = null;
+    const supabaseRecord = await storeWithSupabase(application, submissionDate);
+
+    if (supabaseRecord) {
+      record = supabaseRecord;
+    } else {
+      const firebaseAdmin = getFirebaseAdmin();
+      const db = firebaseAdmin.firestore();
+      const applicationsCollection = db.collection('applications');
+
+      const docRef = await applicationsCollection.add({
+        ...application,
+        submissionDate: firebaseAdmin.firestore.FieldValue.serverTimestamp(),
+        source: 'vercel-join-our-team-form',
+      });
+
+      record = { id: docRef.id };
+    }
 
     await transport.sendMail({
       from: smtpFrom,
@@ -181,7 +241,7 @@ module.exports = async (req, res) => {
     res.status(200).json({
       ok: true,
       message: 'Thanks for applying. We will review your application and contact you if selected.',
-      applicationId: docRef.id,
+      applicationId: record?.id || null,
     });
   } catch (error) {
     res.status(500).json({
