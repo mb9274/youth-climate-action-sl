@@ -130,22 +130,68 @@ async function storeWithSupabase(application, submissionDate) {
   return data || null;
 }
 
-function buildTransport() {
-  const host = getConfig('SMTP_HOST');
-  const port = Number(getConfig('SMTP_PORT', '587'));
-  const user = getConfig('SMTP_USER');
-  const pass = getConfig('SMTP_PASS');
-  const secure = getConfig('SMTP_SECURE', 'false') === 'true';
+function getEmailConfig() {
+  const resendApiKey = getConfig('RESEND_API_KEY');
+  const resendFrom = getConfig('RESEND_FROM');
+  const smtpHost = getConfig('SMTP_HOST');
+  const smtpPort = Number(getConfig('SMTP_PORT', '587'));
+  const smtpUser = getConfig('SMTP_USER');
+  const smtpPass = getConfig('SMTP_PASS');
+  const smtpSecure = getConfig('SMTP_SECURE', 'false') === 'true';
+  const smtpFrom = getConfig('SMTP_FROM', smtpUser);
 
-  if (!host || !user || !pass) {
-    throw new Error('SMTP_HOST, SMTP_USER, and SMTP_PASS are required.');
+  if (resendApiKey && resendFrom) {
+    return { provider: 'resend', resendApiKey, resendFrom };
   }
 
-  return nodemailer.createTransport({
-    host,
-    port,
-    secure,
-    auth: { user, pass },
+  if (smtpHost && smtpUser && smtpPass) {
+    return {
+      provider: 'smtp',
+      smtpTransport: nodemailer.createTransport({
+        host: smtpHost,
+        port: smtpPort,
+        secure: smtpSecure,
+        auth: { user: smtpUser, pass: smtpPass },
+      }),
+      smtpFrom,
+    };
+  }
+
+  throw new Error(
+    'Set RESEND_API_KEY and RESEND_FROM, or configure SMTP_HOST, SMTP_USER, and SMTP_PASS.'
+  );
+}
+
+async function sendEmail(config, message) {
+  if (config.provider === 'resend') {
+    const response = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${config.resendApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        from: config.resendFrom,
+        to: [message.to],
+        subject: message.subject,
+        text: message.text,
+      }),
+    });
+
+    if (!response.ok) {
+      const text = await response.text();
+      throw new Error(`Resend failed: ${text}`);
+    }
+
+    return;
+  }
+
+  await config.smtpTransport.sendMail({
+    from: config.smtpFrom,
+    to: message.to,
+    subject: message.subject,
+    text: message.text,
+    replyTo: message.replyTo,
   });
 }
 
@@ -202,8 +248,7 @@ module.exports = async (req, res) => {
     const application = validation.value;
     const submissionDate = new Date();
     const adminEmail = getConfig('ADMIN_NOTIFICATION_EMAIL', 'climateteam971@gmail.com');
-    const smtpFrom = getConfig('SMTP_FROM', getConfig('SMTP_USER', adminEmail));
-    const transport = buildTransport();
+    const emailConfig = getEmailConfig();
 
     let record = null;
     const supabaseRecord = await storeWithSupabase(application, submissionDate);
@@ -224,16 +269,14 @@ module.exports = async (req, res) => {
       record = { id: docRef.id };
     }
 
-    await transport.sendMail({
-      from: smtpFrom,
+    await sendEmail(emailConfig, {
       to: adminEmail,
       subject: `New Youth Climate Action application from ${application.fullName}`,
       text: formatAdminEmail(application, submissionDate),
       replyTo: application.email,
     });
 
-    await transport.sendMail({
-      from: smtpFrom,
+    await sendEmail(emailConfig, {
       to: application.email,
       subject: 'We received your Youth Climate Action application',
       text: formatApplicantEmail(application),

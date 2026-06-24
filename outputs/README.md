@@ -26,6 +26,8 @@ Set these in your Firebase Functions environment:
 - `SUPABASE_URL`
 - `SUPABASE_SERVICE_ROLE_KEY`
 - `SUPABASE_TABLE=applications`
+- `RESEND_API_KEY`
+- `RESEND_FROM`
 - `SMTP_HOST`
 - `SMTP_PORT`
 - `SMTP_SECURE`
@@ -39,6 +41,9 @@ Set these in your Firebase Functions environment:
 - On Vercel, the easiest setup is Supabase:
   `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, and optionally `SUPABASE_TABLE`.
 - If Supabase is not set, the code falls back to Firebase credentials.
+- For email, the easiest setup is Resend:
+  `RESEND_API_KEY` and `RESEND_FROM`.
+- SMTP is now optional fallback, not required.
 - The frontend does not send email directly, so applicant data stays on the server.
 - For Gmail, use an app password instead of your normal password.
 
