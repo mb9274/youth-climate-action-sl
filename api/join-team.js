@@ -46,16 +46,34 @@ function validatePayload(body) {
   };
 }
 
+function resolveServiceAccount() {
+  const serviceAccountJson = getConfig('FIREBASE_SERVICE_ACCOUNT_KEY');
+  if (serviceAccountJson) {
+    return JSON.parse(serviceAccountJson);
+  }
+
+  const projectId = getConfig('FIREBASE_PROJECT_ID');
+  const clientEmail = getConfig('FIREBASE_CLIENT_EMAIL');
+  const privateKey = getConfig('FIREBASE_PRIVATE_KEY');
+
+  if (projectId && clientEmail && privateKey) {
+    return {
+      projectId,
+      clientEmail,
+      privateKey: privateKey.replace(/\\n/g, '\n'),
+    };
+  }
+
+  throw new Error(
+    'Set FIREBASE_SERVICE_ACCOUNT_KEY, or set FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, and FIREBASE_PRIVATE_KEY in Vercel.'
+  );
+}
+
 function getFirebaseAdmin() {
   if (admin.apps.length) return admin;
 
-  const serviceAccountJson = getConfig('FIREBASE_SERVICE_ACCOUNT_KEY');
-  if (!serviceAccountJson) {
-    throw new Error('FIREBASE_SERVICE_ACCOUNT_KEY is required.');
-  }
-
   admin.initializeApp({
-    credential: admin.credential.cert(JSON.parse(serviceAccountJson)),
+    credential: admin.credential.cert(resolveServiceAccount()),
   });
 
   return admin;

@@ -23,6 +23,10 @@ When a user submits the Join Our Team form:
 Set these in your Firebase Functions environment:
 
 - `ADMIN_NOTIFICATION_EMAIL=climateteam971@gmail.com`
+- `FIREBASE_SERVICE_ACCOUNT_KEY`
+- or `FIREBASE_PROJECT_ID`
+- or `FIREBASE_CLIENT_EMAIL`
+- or `FIREBASE_PRIVATE_KEY`
 - `SMTP_HOST`
 - `SMTP_PORT`
 - `SMTP_SECURE`
@@ -33,6 +37,8 @@ Set these in your Firebase Functions environment:
 ## Notes
 
 - The admin notification email is configurable with `ADMIN_NOTIFICATION_EMAIL`.
+- On Vercel, set either `FIREBASE_SERVICE_ACCOUNT_KEY` or the split Firebase env vars:
+  `FIREBASE_PROJECT_ID`, `FIREBASE_CLIENT_EMAIL`, and `FIREBASE_PRIVATE_KEY`.
 - The frontend does not send email directly, so applicant data stays on the server.
 - For Gmail, use an app password instead of your normal password.
 

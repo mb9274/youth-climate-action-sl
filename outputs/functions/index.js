@@ -53,6 +53,29 @@ function validatePayload(body) {
   };
 }
 
+function resolveServiceAccount() {
+  const serviceAccountJson = getConfig('FIREBASE_SERVICE_ACCOUNT_KEY');
+  if (serviceAccountJson) {
+    return JSON.parse(serviceAccountJson);
+  }
+
+  const projectId = getConfig('FIREBASE_PROJECT_ID');
+  const clientEmail = getConfig('FIREBASE_CLIENT_EMAIL');
+  const privateKey = getConfig('FIREBASE_PRIVATE_KEY');
+
+  if (projectId && clientEmail && privateKey) {
+    return {
+      projectId,
+      clientEmail,
+      privateKey: privateKey.replace(/\\n/g, '\n'),
+    };
+  }
+
+  throw new Error(
+    'Set FIREBASE_SERVICE_ACCOUNT_KEY, or set FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, and FIREBASE_PRIVATE_KEY.'
+  );
+}
+
 function buildTransport() {
   const host = getConfig('SMTP_HOST');
   const port = Number(getConfig('SMTP_PORT', '587'));
@@ -72,6 +95,16 @@ function buildTransport() {
     secure,
     auth: { user, pass },
   });
+}
+
+function ensureAdminApp() {
+  if (!admin.apps.length) {
+    admin.initializeApp({
+      credential: admin.credential.cert(resolveServiceAccount()),
+    });
+  }
+
+  return admin;
 }
 
 function formatAdminEmail(application, submissionDate) {
@@ -126,13 +159,16 @@ exports.submitJoinTeamApplication = onRequest({ region: 'us-central1' }, async (
 
     const application = validation.value;
     const submissionDate = new Date();
+    const firebaseAdmin = ensureAdminApp();
+    const db = firebaseAdmin.firestore();
+    const applicationsCollection = db.collection('applications');
     const adminEmail = getConfig('ADMIN_NOTIFICATION_EMAIL', 'climateteam971@gmail.com');
     const smtpFrom = getConfig('SMTP_FROM', getConfig('SMTP_USER', adminEmail));
     const transport = buildTransport();
 
     const docRef = await applicationsCollection.add({
       ...application,
-      submissionDate: admin.firestore.FieldValue.serverTimestamp(),
+      submissionDate: firebaseAdmin.firestore.FieldValue.serverTimestamp(),
       source: 'join-our-team-form',
     });
 
