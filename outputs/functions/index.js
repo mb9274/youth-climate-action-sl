@@ -2,6 +2,7 @@ const admin = require('firebase-admin');
 const nodemailer = require('nodemailer');
 const { onRequest } = require('firebase-functions/v2/https');
 const logger = require('firebase-functions/logger');
+const { createClient } = require('@supabase/supabase-js');
 
 admin.initializeApp();
 
@@ -88,8 +89,19 @@ function getSupabaseConfig() {
   return null;
 }
 
-async function storeWithSupabase(application, submissionDate) {
+function getSupabaseClient() {
   const supabase = getSupabaseConfig();
+  if (!supabase) {
+    return null;
+  }
+
+  return createClient(supabase.url, supabase.serviceRoleKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+}
+
+async function storeWithSupabase(application, submissionDate) {
+  const supabase = getSupabaseClient();
   if (!supabase) {
     return null;
   }
@@ -106,24 +118,13 @@ async function storeWithSupabase(application, submissionDate) {
     source: 'firebase-cloud-function-form',
   };
 
-  const response = await fetch(`${supabase.url}/rest/v1/${supabase.table}`, {
-    method: 'POST',
-    headers: {
-      apikey: supabase.serviceRoleKey,
-      Authorization: `Bearer ${supabase.serviceRoleKey}`,
-      'Content-Type': 'application/json',
-      Prefer: 'return=representation',
-    },
-    body: JSON.stringify(payload),
-  });
+  const { data, error } = await supabase.from(getSupabaseConfig().table).insert(payload).select().single();
 
-  if (!response.ok) {
-    const text = await response.text();
-    throw new Error(`Supabase insert failed: ${text}`);
+  if (error) {
+    throw new Error(`Supabase insert failed: ${error.message}`);
   }
 
-  const data = await response.json().catch(() => []);
-  return Array.isArray(data) && data[0] ? data[0] : null;
+  return data || null;
 }
 
 function buildTransport() {
@@ -251,7 +252,7 @@ exports.submitJoinTeamApplication = onRequest({ region: 'us-central1' }, async (
     await transport.sendMail(applicantMessage);
 
     logger.info('Application stored and notifications sent.', {
-      applicationId: docRef.id,
+      applicationId: record?.id || null,
       adminEmail,
     });
 

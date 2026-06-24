@@ -1,3 +1,4 @@
 work/
 .agents/
 .codex/
+node_modules/
