@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Youth climate action application website with a hopeful, simple, and mobile-friendly design."
+    />
+    <meta name="application-api-url" content="/api/join-team" />
+    <title>Youth Climate Action SL | Join Our Team</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="hero">
+        <nav class="topbar" aria-label="Primary">
+          <div class="brand">
+            <span class="brand-mark">Y</span>
+            <span class="brand-text">
+              <strong>Youth Climate Action</strong>
+              <small>Apply to join the team</small>
+            </span>
+          </div>
+          <a class="ghost-link" href="#apply">Apply now</a>
+        </nav>
+
+        <div class="hero-grid">
+          <section class="hero-copy">
+            <p class="eyebrow">Youth-led. Practical. Hopeful.</p>
+            <h1>Join a team where young people turn climate ideas into action.</h1>
+            <p class="lede">
+              We are inviting motivated youth to join our climate action team.
+              If you care about your community, want to learn, and want to make
+              a real difference, this is for you.
+            </p>
+
+            <div class="cta-row">
+              <a class="button primary" href="#apply">Start your application</a>
+              <a class="button secondary" href="#about">See what you will do</a>
+            </div>
+
+            <div class="hero-badges" aria-label="Quick facts">
+              <span>Age 16-24</span>
+              <span>Simple application</span>
+              <span>Safe and youth-friendly</span>
+            </div>
+          </section>
+
+          <aside class="hero-panel" aria-label="Overview">
+            <div class="panel-card accent">
+              <p class="panel-label">What we value</p>
+              <h2>Authentic, not perfect</h2>
+              <p>
+                We want your ideas, your voice, and your energy. You do not need
+                fancy experience to apply.
+              </p>
+            </div>
+            <div class="panel-card">
+              <p class="panel-label">You will help with</p>
+              <ul class="check-list">
+                <li>Community climate activities</li>
+                <li>Social media and youth stories</li>
+                <li>Team meetings and creative ideas</li>
+              </ul>
+            </div>
+          </aside>
+        </div>
+      </header>
+
+      <main>
+        <section class="section" id="about">
+          <div class="section-heading">
+            <p class="eyebrow">Why join</p>
+            <h2>A simple space for youth who want to learn and lead.</h2>
+          </div>
+
+          <div class="info-grid">
+            <article class="info-card">
+              <h3>Learn by doing</h3>
+              <p>
+                Gain practical experience in climate action, teamwork, and
+                communication while working on real community ideas.
+              </p>
+            </article>
+            <article class="info-card">
+              <h3>Use your voice</h3>
+              <p>
+                We care about youth voice. Bring your perspective, your culture,
+                and your local knowledge into the work.
+              </p>
+            </article>
+            <article class="info-card">
+              <h3>Make an impact</h3>
+              <p>
+                Help share climate messages, support events, and create positive
+                change that people can see and feel.
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <section class="section split">
+          <div class="section-heading">
+            <p class="eyebrow">What to expect</p>
+            <h2>Clear, friendly, and easy to follow.</h2>
+          </div>
+
+          <div class="timeline">
+            <div class="timeline-item">
+              <span>1</span>
+              <div>
+                <h3>Apply online</h3>
+                <p>Fill in the short form below with your details and interests.</p>
+              </div>
+            </div>
+            <div class="timeline-item">
+              <span>2</span>
+              <div>
+                <h3>We review your application</h3>
+                <p>We check for commitment, teamwork, and alignment with our mission.</p>
+              </div>
+            </div>
+            <div class="timeline-item">
+              <span>3</span>
+              <div>
+                <h3>Welcome to the team</h3>
+                <p>Selected applicants get invited to the next step and onboarding.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="section application" id="apply">
+          <div class="section-heading">
+            <p class="eyebrow">Application form</p>
+            <h2>Tell us a little about yourself.</h2>
+            <p class="section-note">
+              Keep it honest and simple. We only ask for the details we need.
+            </p>
+          </div>
+
+          <form class="application-form" id="applicationForm" data-api-url="/api/join-team">
+            <div class="field-grid">
+              <label>
+                Full name
+                <input type="text" name="fullName" placeholder="Your name" required />
+              </label>
+              <label>
+                Age
+                <input type="number" name="age" min="16" max="24" placeholder="16-24" required />
+              </label>
+              <label>
+                Email address
+                <input type="email" name="email" placeholder="name@email.com" required />
+              </label>
+              <label>
+                Phone number
+                <input type="tel" name="phone" placeholder="+232 ..." />
+              </label>
+            </div>
+
+            <div class="field-grid">
+              <label>
+                District / location
+                <input type="text" name="location" placeholder="Your district or location" />
+              </label>
+              <label>
+                Skills and interests
+                <input
+                  type="text"
+                  name="skillsInterests"
+                  placeholder="Examples: speaking, design, writing, organizing"
+                />
+              </label>
+            </div>
+
+            <label>
+              Motivation for joining
+              <textarea
+                name="motivation"
+                rows="5"
+                placeholder="Tell us why you want to be part of the team."
+                required
+              ></textarea>
+            </label>
+
+            <label class="checkbox">
+              <input type="checkbox" name="agree" required />
+              <span>
+                I confirm that the details I shared are true and I am happy to be
+                contacted about the application.
+              </span>
+            </label>
+
+            <button class="button submit" type="submit">Submit application</button>
+            <p class="form-footnote">
+              Your application will be stored securely and we will email you a
+              confirmation after you submit.
+            </p>
+          </form>
+        </section>
+      </main>
+    </div>
+
+    <div class="success-toast" id="successToast" hidden>
+      <strong>Application submitted</strong>
+      <p>Thanks for applying. We will review your application and contact you if selected.</p>
+      <button class="toast-close" type="button" id="closeToast">Close</button>
+    </div>
+
+    <script src="./script.js"></script>
+  </body>
+</html>

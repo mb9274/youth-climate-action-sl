@@ -1,0 +1,19 @@
+{
+  "hosting": {
+    "public": ".",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "/api/**",
+        "function": "submitJoinTeamApplication"
+      }
+    ]
+  },
+  "functions": {
+    "source": "functions"
+  }
+}
